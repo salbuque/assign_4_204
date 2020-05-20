@@ -17,17 +17,49 @@ library(scales)
 library(purrr)
 ```
 
-- 1. Under BAU T(t) = min(Tt/100, T) is the temperature in year t (t = 0, 1, ..., 200) relative to the temperature at time 0 
 
-- Where T is the BAU temperature increase at year 100. For example, if T = 5 then the
-temperature increases over time (linearly) until year 100, when it flattens out at 5.
-The hotter it is, the more it affects daily life and it starts to eat away at economic
-activity. 
-
+Business as Usual Functions and Parameters 
 ```{r}
+# No Climate Change 
 # define function Temperature over time 
 
-no_cc_run <- function(t, T){
+zero_cc_run <- function(t, T){
+
+#define variables
+T<- 0 #BAU temperature increase at year 100
+yr_span<- 100 #span of time 
+s<- .005 # pure rate of time preference
+n<- .5 #how does income change value of money
+g<- .01 #rate economic growth
+B<- .05 
+  
+#find the temperature
+temperature<-  min(t*T/yr_span, T)
+
+# fraction of economic activity that is retained in a year 
+yr_econ_activity<- exp(-B*(temperature)^2)
+
+#Total economic activity/consumption 
+total_econ_activity<- (yr_econ_activity)*exp(g*t)
+
+
+return(data.frame(time=t, 
+                  marginal_T_change=T, 
+                    temperature= temperature, 
+                    yr_econ_activity=yr_econ_activity, 
+                    total_econ_activity=total_econ_activity))
+}
+
+zero_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, zero_cc_run)
+
+
+```
+
+```{r}
+# Moderate Climate Change 
+# define function Temperature over time 
+
+mod_cc_run <- function(t, T){
 
 #define variables
 T<- 2 #BAU temperature increase at year 100
@@ -48,37 +80,66 @@ total_econ_activity<- (yr_econ_activity)*exp(g*t)
 
 
 return(data.frame(time=t, 
-                  marginal_t_change=T, 
+                  marginal_T_change=T, 
                     temperature= temperature, 
                     yr_econ_activity=yr_econ_activity, 
                     total_econ_activity=total_econ_activity))
 }
 
-moderate_cc_df <- purrr::map2_dfr(seq(from=0,to=100,by=1), T, no_cc_run)
+mod_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, mod_cc_run)
 
 
 ```
 
-- 2. Let K(t) be the fraction of economic activity that is retained in a year if the
-temperature is K(t), given by K(t) = exp(−BT(t)^2)
+```{r}
+# No Climate Change 
+# define function Temperature over time 
 
-- 3 . Economic activity (“consumption”) grows over time at rate g, but is reduced by K, 
-Total consumption at time t is:C(t) = K(t)exp(gt) 
+ext_cc_run <- function(t, T){
 
-- 4. Society’s utility from consumption is given by the function U(C) = C1−n/1 − n
+#define variables
+T<- 8 #BAU temperature increase at year 100
+yr_span<- 100 #span of time 
+s<- .005 # pure rate of time preference
+n<- .5 #how does income change value of money
+g<- .01 #rate economic growth
+B<- .05 
+  
+#find the temperature
+temperature<-  min(t*T/yr_span, T)
 
-- 5. The discount rate is given by the Ramsey Rule: r = s + ng 
+# fraction of economic activity that is retained in a year 
+yr_econ_activity<- exp(-B*(temperature)^2)
 
-#Base case parameters for this model: s= .005, n = .5, g = .01, B= .05.
-- n = elasticity of marginal utility of consumption with respect to income (how much more does a poor person value a dollar compared to a rich person)
-- s: pure rate of time preference 
-- g: growth rate of income over time 
+#Total economic activity/consumption 
+total_econ_activity<- (yr_econ_activity)*exp(g*t)
 
+
+return(data.frame(time=t, 
+                  marginal_T_change=T, 
+                    temperature= temperature, 
+                    yr_econ_activity=yr_econ_activity, 
+                    total_econ_activity=total_econ_activity))
+}
+
+ext_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, ext_cc_run)
+
+
+```
 1. Plots
 
 A. Temperature over time 
+```{r plot_no_cc_over_time}
+ggplot()+
+  geom_point(data = zero_cc_df, aes(x= time, y = temperature),color="red")+
+  geom_point(data = mod_cc_df, aes(x= time, y = temperature),color="blue")+
+  geom_point(data = ext_cc_df, aes(x= time, y = temperature),color="green")+
+  xlim(0,200)
+```
+
 ```{r}
 #no climate change (T = 0)
+
 #modest climate change (T = 2)
 #with extreme climate change (T = 8)
 ```
