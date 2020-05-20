@@ -42,12 +42,15 @@ yr_econ_activity<- exp(-B*(temperature)^2)
 #Total economic activity/consumption 
 total_econ_activity<- (yr_econ_activity)*exp(g*t)
 
+#Utility 
+utility<- ((total_econ_activity)^(1-n))/(1-n)
 
 return(data.frame(time=t, 
                   marginal_T_change=T, 
                     temperature= temperature, 
                     yr_econ_activity=yr_econ_activity, 
-                    total_econ_activity=total_econ_activity))
+                    total_econ_activity=total_econ_activity, 
+                  utility = utility))
 }
 
 zero_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, zero_cc_run)
@@ -78,12 +81,15 @@ yr_econ_activity<- exp(-B*(temperature)^2)
 #Total economic activity/consumption 
 total_econ_activity<- (yr_econ_activity)*exp(g*t)
 
+#Utility 
+utility<- ((total_econ_activity)^(1-n))/(1-n)
 
 return(data.frame(time=t, 
-                  marginal_T_change=T, 
+                  T_change=T, 
                     temperature= temperature, 
                     yr_econ_activity=yr_econ_activity, 
-                    total_econ_activity=total_econ_activity))
+                    total_econ_activity=total_econ_activity,
+                  utility = utility))
 }
 
 mod_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, mod_cc_run)
@@ -98,7 +104,7 @@ mod_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, mod_cc_run)
 ext_cc_run <- function(t, T){
 
 #define variables
-T<- 8 #BAU temperature increase at year 100
+T <- 8 #BAU temperature increase at year 100
 yr_span<- 100 #span of time 
 s<- .005 # pure rate of time preference
 n<- .5 #how does income change value of money
@@ -114,16 +120,19 @@ yr_econ_activity<- exp(-B*(temperature)^2)
 #Total economic activity/consumption 
 total_econ_activity<- (yr_econ_activity)*exp(g*t)
 
+#Utility 
+utility<- ((total_econ_activity)^(1-n))/(1-n)
+
 
 return(data.frame(time=t, 
-                  marginal_T_change=T, 
+                  T_change=T, 
                     temperature= temperature, 
                     yr_econ_activity=yr_econ_activity, 
-                    total_econ_activity=total_econ_activity))
+                    total_econ_activity=total_econ_activity, 
+                  utility = utility))
 }
 
 ext_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, ext_cc_run)
-
 
 ```
 1. Plots
@@ -137,30 +146,27 @@ ggplot()+
   xlim(0,200)
 ```
 
-```{r}
-#no climate change (T = 0)
+B. Annual Economic Activity 
 
-#modest climate change (T = 2)
-#with extreme climate change (T = 8)
+```{r plot_econ_activity_cc_scenarios}
+ggplot()+
+  geom_point(data = zero_cc_df, aes(x= time, y = total_econ_activity), color ="red")+
+  geom_point(data = mod_cc_df, aes(x= time, y = total_econ_activity), color="blue")+
+  geom_point(data = ext_cc_df, aes(x= time, y = total_econ_activity),color="green")+
+  xlim(0,200)
 ```
 
-B. Consumption over time 
-```{r}
-#no climate change 
-#modest climate change 
-#with extreme climate change 
+C. Utility
+
+```{r plot_econ_activity_cc_scenarios}
+ggplot()+
+  geom_point(data = zero_cc_df, aes(x= time, y = utility), color ="red")+
+  geom_point(data = mod_cc_df, aes(x= time, y = utility), color="blue")+
+  geom_point(data = ext_cc_df, aes(x= time, y = utility),color="green")+
+  xlim(0,200)
+```
 ```
 
-c.  Undiscounted utility over time 
-```{r}
-#no climate change
-#modest climate change 
-#with extreme climate change 
-```
-
-```{r}
-
-```
 
 
 
