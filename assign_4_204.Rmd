@@ -1,0 +1,109 @@
+---
+title: "Homework #4 (A Climate Change Model)"
+author: "Gavi, Lizzie, Simone"
+date: "5/19/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(tidyr)
+library(tidyverse)
+library(janitor)
+library(ggplot2)
+library(wesanderson)
+library(dplyr)
+library(scales)
+library(purrr)
+```
+
+- 1. Under BAU r(t) = min(Tt/100, T) is the temperature in year t (t = 0, 1, ..., 200) relative to the temperature at time 0 
+
+- Where T is the BAU temperature increase at year 100. For example, if T = 5 then the
+temperature increases over time (linearly) until year 100, when it flattens out at 5.
+The hotter it is, the more it affects daily life and it starts to eat away at economic
+activity. 
+
+- 2. Let K(t) be the fraction of economic activity that is retained in a year if the
+temperature is K(t), given by K(t) = exp(−Br(t)^2)
+
+- 3 . Economic activity (“consumption”) grows over time at rate g, but is reduced by K, 
+Total consumption at time t is:C(t) = K(t)exp(gt) 
+
+- 4. Society’s utility from consumption is given by the function U(C) = C1−n/1 − n
+
+- 5. The discount rate is given by the Ramsey Rule: r = s + ng 
+
+#Base case parameters for this model: s= .005, n = .5, g = .01, B= .05.
+- n = elasticity of marginal utility of consumption with respect to income (how much more does a poor person value a dollar compared to a rich person)
+- s: pure rate of time preference 
+- g: growth rate of income over time 
+
+1. Plots
+
+A. Temperature over time 
+```{r}
+#no climate change (T = 0)
+#modest climate change (T = 2)
+#with extreme climate change (T = 8)
+```
+
+B. Consumption over time 
+```{r}
+#no climate change 
+#modest climate change 
+#with extreme climate change 
+```
+
+c.  Undiscounted utility over time 
+```{r}
+#no climate change
+#modest climate change 
+#with extreme climate change 
+```
+
+2. Analysis
+
+A. 
+
+Present value (i.e. discounted) utility over the next 200 years with climate change
+```{r}
+#Suppose T = 4.4. (under BAU, climate change will eventually lead to a 4.4 degree increase in temperature)
+
+```
+
+
+Present value utility without climate change
+```{r}
+
+```
+
+Percentage loss in present value utility from climate change (call this L)
+```{r}
+
+```
+
+B. Sensitivity Analysis of L 
+
+Percent change in L that arises from a 10% increase in each of parameters (B, n, g, T)
+```{r}
+# create function to run model with many different inputs 
+
+```
+
+C. Prevent climate change from occurring requires giving up a fraction theta of consumption every year for the next 200 years. Maximum value of theta society would be willing to endure every year to completely prevent climate change, theta*
+
+```{r}
+# assume original parameters
+#T = 0 instead of T = 4.4
+
+```
+
+D. Suppose we are uncertain about T
+
+Theta* under uncertainty over T
+```{r}
+#probability distribution:T = 2 (with probability .2), T = 4 (with probability .5), and T = 6 (with probability .3)
+
+```
+
