@@ -1,6 +1,6 @@
 ---
 title: "Homework #4 (A Climate Change Model)"
-author: "Gavi, Lizzie, Simone"
+author: "Gavi, Lizzy, Simone"
 date: "5/19/2020"
 output: html_document
 ---
@@ -17,7 +17,6 @@ library(scales)
 library(purrr)
 ```
 
-
 Business as Usual Functions and Parameters 
 ```{r}
 # No Climate Change 
@@ -32,6 +31,7 @@ s<- .005 # pure rate of time preference
 n<- .5 #how does income change value of money
 g<- .01 #rate economic growth
 B<- .05 
+r <<- s+n*g
   
 #find the temperature
 temperature<-  min(t*T/yr_span, T)
@@ -45,12 +45,16 @@ total_econ_activity<- (yr_econ_activity)*exp(g*t)
 #Utility 
 utility<- ((total_econ_activity)^(1-n))/(1-n)
 
+#PV
+PV <- (utility/(1+r)^t)
+
 return(data.frame(time=t, 
-                  marginal_T_change=T, 
+                  T_change=T, 
                     temperature= temperature, 
                     yr_econ_activity=yr_econ_activity, 
                     total_econ_activity=total_econ_activity, 
-                  utility = utility))
+                  utility = utility,
+                  PV = PV))
 }
 
 zero_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, zero_cc_run)
@@ -84,12 +88,16 @@ total_econ_activity<- (yr_econ_activity)*exp(g*t)
 #Utility 
 utility<- ((total_econ_activity)^(1-n))/(1-n)
 
+#PV
+PV <- (utility/(1+r)^t)
+
 return(data.frame(time=t, 
                   T_change=T, 
                     temperature= temperature, 
                     yr_econ_activity=yr_econ_activity, 
                     total_econ_activity=total_econ_activity,
-                  utility = utility))
+                  utility = utility,
+                  PV = PV))
 }
 
 mod_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, mod_cc_run)
@@ -123,13 +131,16 @@ total_econ_activity<- (yr_econ_activity)*exp(g*t)
 #Utility 
 utility<- ((total_econ_activity)^(1-n))/(1-n)
 
+#PV
+PV <- (utility/(1+r)^t)
 
 return(data.frame(time=t, 
                   T_change=T, 
                     temperature= temperature, 
                     yr_econ_activity=yr_econ_activity, 
                     total_econ_activity=total_econ_activity, 
-                  utility = utility))
+                  utility = utility,
+                  PV = PV))
 }
 
 ext_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, ext_cc_run)
@@ -178,7 +189,50 @@ Present value (i.e. discounted) utility over the next 200 years with climate cha
 ```{r}
 #Suppose T = 4.4. (under BAU, climate change will eventually lead to a 4.4 degree increase in temperature)
 
+# No Climate Change 
+# define function Temperature over time 
+
+ext_cc_run <- function(t, T){
+
+#define variables
+T <- 4.4 #BAU temperature increase at year 100
+yr_span<- 100 #span of time 
+s<- .005 # pure rate of time preference
+n<- .5 #how does income change value of money
+g<- .01 #rate economic growth
+B<- .05 
+  
+#find the temperature
+temperature<-  min(t*T/yr_span, T)
+
+# fraction of economic activity that is retained in a year 
+yr_econ_activity<- exp(-B*(temperature)^2)
+
+#Total economic activity/consumption 
+total_econ_activity<- (yr_econ_activity)*exp(g*t)
+
+#Utility 
+utility<- ((total_econ_activity)^(1-n))/(1-n)
+
+#PV
+PV <- (utility/(1+r)^t)
+
+return(data.frame(time=t, 
+                  T_change=T, 
+                    temperature= temperature, 
+                    yr_econ_activity=yr_econ_activity, 
+                    total_econ_activity=total_econ_activity, 
+                  utility = utility,
+                  PV = PV))
+}
+
+temp44_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, ext_cc_run)
+
+zero_PV_df <- zero_cc_df %>% 
+select(PV)
 ```
+
+
 
 
 Present value utility without climate change
@@ -214,4 +268,3 @@ Theta* under uncertainty over T
 #probability distribution:T = 2 (with probability .2), T = 4 (with probability .5), and T = 6 (with probability .3)
 
 ```
-
