@@ -1,0 +1,306 @@
+---
+title: "Homework #4 (A Climate Change Model)"
+author: "Gavi, Lizzy, Simone"
+date: "5/19/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(tidyr)
+library(tidyverse)
+library(janitor)
+library(ggplot2)
+library(wesanderson)
+library(dplyr)
+library(scales)
+library(purrr)
+```
+
+Business as Usual Functions and Parameters 
+```{r}
+# No Climate Change 
+# define function Temperature over time 
+
+zero_cc_run <- function(t, T){
+
+#define variables
+yr_span<- 100 #span of time 
+s<- .005 # pure rate of time preference
+n<- .5 #how does income change value of money
+g<- .01 #rate economic growth
+B<- .05 
+r <<- s+n*g
+s10 <- s*1.1
+n10 <- n*1.1
+g10 <- g*1.1
+B10 <- B*1.1
+  
+#find the temperature
+temperature<-  min(t*T/yr_span, T)
+
+# fraction of economic activity that is retained in a year 
+yr_econ_activity<- exp(-B*(temperature)^2)
+
+#Total economic activity/consumption 
+total_econ_activity<- (yr_econ_activity)*exp(g*t)
+
+#Utility 
+utility<- ((total_econ_activity)^(1-n))/(1-n)
+
+#PV
+PV <- (utility/(1+r)^t)
+
+return(data.frame(time=t, 
+                  T_change=T, 
+                    temperature= temperature, 
+                    yr_econ_activity=yr_econ_activity, 
+                    total_econ_activity=total_econ_activity, 
+                  utility = utility,
+                  PV = PV))
+}
+
+zero_cc_df <- purrr::map2_dfr(rep(seq(from=0,to=200,by=1), 4), c(rep(0, 201), rep(2, 201), rep(4.4, 201), rep(8, 201)), zero_cc_run)
+
+
+```
+
+```{r}
+# Moderate Climate Change 
+# define function Temperature over time 
+
+mod_cc_run <- function(t){
+
+#define variables
+T<- 2 #BAU temperature increase at year 100
+yr_span<- 100 #span of time 
+s<- .005 # pure rate of time preference
+n<- .5 #how does income change value of money
+g<- .01 #rate economic growth
+B<- .05 
+  
+#find the temperature
+temperature<-  min(t*T/yr_span, T)
+
+# fraction of economic activity that is retained in a year 
+yr_econ_activity<- exp(-B*(temperature)^2)
+
+#Total economic activity/consumption 
+total_econ_activity<- (yr_econ_activity)*exp(g*t)
+
+#Utility 
+utility<- ((total_econ_activity)^(1-n))/(1-n)
+
+#PV
+PV <- (utility/(1+r)^t)
+
+return(data.frame(time=t, 
+                  T_change=T, 
+                    temperature= temperature, 
+                    yr_econ_activity=yr_econ_activity, 
+                    total_econ_activity=total_econ_activity,
+                  utility = utility,
+                  PV = PV))
+}
+
+mod_cc_df <- purrr::map_dfr(seq(from=0,to=200,by=1), mod_cc_run)
+
+
+```
+
+```{r}
+# No Climate Change 
+# define function Temperature over time 
+
+ext_cc_run <- function(t, T){
+
+#define variables
+T <- 8 #BAU temperature increase at year 100
+yr_span<- 100 #span of time 
+s<- .005 # pure rate of time preference
+n<- .5 #how does income change value of money
+g<- .01 #rate economic growth
+B<- .05 
+  
+#find the temperature
+temperature<-  min(t*T/yr_span, T)
+
+# fraction of economic activity that is retained in a year 
+yr_econ_activity<- exp(-B*(temperature)^2)
+
+#Total economic activity/consumption 
+total_econ_activity<- (yr_econ_activity)*exp(g*t)
+
+#Utility 
+utility<- ((total_econ_activity)^(1-n))/(1-n)
+
+#PV
+PV <- (utility/(1+r)^t)
+
+return(data.frame(time=t, 
+                  T_change=T, 
+                    temperature= temperature, 
+                    yr_econ_activity=yr_econ_activity, 
+                    total_econ_activity=total_econ_activity, 
+                  utility = utility,
+                  PV = PV))
+}
+
+ext_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, ext_cc_run)
+
+```
+1. Plots
+
+A. Temperature over time 
+```{r plot_no_cc_over_time}
+ggplot()+
+  geom_point(data = zero_cc_df, aes(x= time, y = temperature),color="red")+
+  geom_point(data = mod_cc_df, aes(x= time, y = temperature),color="blue")+
+  geom_point(data = ext_cc_df, aes(x= time, y = temperature),color="green")+
+  xlim(0,200)
+```
+
+B. Annual Economic Activity 
+
+```{r plot_econ_activity_cc_scenarios}
+ggplot()+
+  geom_point(data = zero_cc_df, aes(x= time, y = total_econ_activity), color ="red")+
+  geom_point(data = mod_cc_df, aes(x= time, y = total_econ_activity), color="blue")+
+  geom_point(data = ext_cc_df, aes(x= time, y = total_econ_activity),color="green")+
+  xlim(0,200)
+```
+
+C. Utility
+
+```{r plot_econ_activity_cc_scenarios}
+ggplot()+
+  geom_point(data = zero_cc_df, aes(x= time, y = utility), color ="red")+
+  geom_point(data = mod_cc_df, aes(x= time, y = utility), color="blue")+
+  geom_point(data = ext_cc_df, aes(x= time, y = utility),color="green")+
+  xlim(0,200)
+```
+
+
+2. Analysis
+
+A. 
+
+Present value (i.e. discounted) utility over the next 200 years with climate change
+```{r}
+#Suppose T = 4.4. (under BAU, climate change will eventually lead to a 4.4 degree increase in temperature)
+
+# No Climate Change 
+# define function Temperature over time 
+
+ext_cc_run <- function(t, T){
+
+#define variables
+T <- 4.4 #BAU temperature increase at year 100
+yr_span<- 100 #span of time 
+s<- .005 # pure rate of time preference
+n<- .5 #how does income change value of money
+g<- .01 #rate economic growth
+B<- .05 
+  
+#find the temperature
+temperature<-  min(t*T/yr_span, T)
+
+# fraction of economic activity that is retained in a year 
+yr_econ_activity<- exp(-B*(temperature)^2)
+
+#Total economic activity/consumption 
+total_econ_activity<- (yr_econ_activity)*exp(g*t)
+
+#Utility 
+utility<- ((total_econ_activity)^(1-n))/(1-n)
+
+#PV
+PV <- (utility/(1+r)^t)
+
+return(data.frame(time=t, 
+                  T_change=T, 
+                    temperature= temperature, 
+                    yr_econ_activity=yr_econ_activity, 
+                    total_econ_activity=total_econ_activity, 
+                  utility = utility,
+                  PV = PV))
+}
+
+temp44_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, ext_cc_run)
+
+# Create dfs with PV values
+zero_PV_df <- zero_cc_df %>% 
+  select(time, PV) %>% 
+  rename("zero_PV" = PV)
+
+temp44_PV_df <- temp44_cc_df %>% 
+  select(time, PV) %>% 
+  rename("temp44_PV" = PV)
+
+# Merge dfs and do calculations to find percent change
+PV_df_full <- merge(zero_PV_df, temp44_PV_df) %>% 
+  mutate(pct_change = ((temp44_PV - zero_PV)/zero_PV)*100)
+```
+
+B. Sensitivity Analysis of L 
+
+Percent change in L that arises from a 10% increase in each of parameters (B, n, g, T)
+```{r}
+# Ineffeciently but correctly running our model 8 freakin times in order to get results for part B
+
+# S variable change, zero temp change
+
+s10_zero_cc_run <- function(t, T){
+
+#define variables
+T<- 0 #BAU temperature increase at year 100
+yr_span<- 100 #span of time 
+s10 <<- .005*1.1 # pure rate of time preference
+n<- .5 #how does income change value of money
+g<- .01 #rate economic growth
+B<- .05 
+r <<- s+n*g
+  
+#find the temperature
+temperature<-  min(t*T/yr_span, T)
+
+# fraction of economic activity that is retained in a year 
+yr_econ_activity<- exp(-B*(temperature)^2)
+
+#Total economic activity/consumption 
+total_econ_activity<- (yr_econ_activity)*exp(g*t)
+
+#Utility 
+utility<- ((total_econ_activity)^(1-n))/(1-n)
+
+#PV
+PV <- (utility/(1+r)^t)
+
+return(data.frame(time=t, 
+                  T_change=T, 
+                    temperature= temperature, 
+                    yr_econ_activity=yr_econ_activity, 
+                    total_econ_activity=total_econ_activity, 
+                  utility = utility,
+                  PV = PV))
+}
+
+zero_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, zero_cc_run)
+
+```
+
+C. Prevent climate change from occurring requires giving up a fraction theta of consumption every year for the next 200 years. Maximum value of theta society would be willing to endure every year to completely prevent climate change, theta*
+
+```{r}
+# assume original parameters
+#T = 0 instead of T = 4.4
+
+```
+
+D. Suppose we are uncertain about T
+
+Theta* under uncertainty over T
+```{r}
+#probability distribution:T = 2 (with probability .2), T = 4 (with probability .5), and T = 6 (with probability .3)
+
+```
