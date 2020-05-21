@@ -25,13 +25,16 @@ Business as Usual Functions and Parameters
 zero_cc_run <- function(t, T){
 
 #define variables
-T<- 0 #BAU temperature increase at year 100
 yr_span<- 100 #span of time 
 s<- .005 # pure rate of time preference
 n<- .5 #how does income change value of money
 g<- .01 #rate economic growth
 B<- .05 
 r <<- s+n*g
+s10 <- s*1.1
+n10 <- n*1.1
+g10 <- g*1.1
+B10 <- B*1.1
   
 #find the temperature
 temperature<-  min(t*T/yr_span, T)
@@ -48,6 +51,8 @@ utility<- ((total_econ_activity)^(1-n))/(1-n)
 #PV
 PV <- (utility/(1+r)^t)
 
+#PV S10
+
 return(data.frame(time=t, 
                   T_change=T, 
                     temperature= temperature, 
@@ -57,7 +62,7 @@ return(data.frame(time=t,
                   PV = PV))
 }
 
-zero_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, zero_cc_run)
+zero_cc_df <- purrr::map2_dfr(rep(seq(from=0,to=200,by=1), 4), c(rep(0, 201), rep(2, 201), rep(4.4, 201), rep(8, 201)), zero_cc_run)
 
 
 ```
@@ -66,7 +71,7 @@ zero_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, zero_cc_run)
 # Moderate Climate Change 
 # define function Temperature over time 
 
-mod_cc_run <- function(t, T){
+mod_cc_run <- function(t){
 
 #define variables
 T<- 2 #BAU temperature increase at year 100
@@ -100,7 +105,7 @@ return(data.frame(time=t,
                   PV = PV))
 }
 
-mod_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, mod_cc_run)
+mod_cc_df <- purrr::map_dfr(seq(from=0,to=200,by=1), mod_cc_run)
 
 
 ```
@@ -176,9 +181,6 @@ ggplot()+
   geom_point(data = ext_cc_df, aes(x= time, y = utility),color="green")+
   xlim(0,200)
 ```
-```
-
-
 
 
 2. Analysis
@@ -228,28 +230,64 @@ return(data.frame(time=t,
 
 temp44_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, ext_cc_run)
 
+# Create dfs with PV values
 zero_PV_df <- zero_cc_df %>% 
-select(PV)
-```
+  select(time, PV) %>% 
+  rename("zero_PV" = PV)
 
+temp44_PV_df <- temp44_cc_df %>% 
+  select(time, PV) %>% 
+  rename("temp44_PV" = PV)
 
-
-
-Present value utility without climate change
-```{r}
-
-```
-
-Percentage loss in present value utility from climate change (call this L)
-```{r}
-
+# Merge dfs and do calculations to find percent change
+PV_df_full <- merge(zero_PV_df, temp44_PV_df) %>% 
+  mutate(pct_change = ((temp44_PV - zero_PV)/zero_PV)*100)
 ```
 
 B. Sensitivity Analysis of L 
 
 Percent change in L that arises from a 10% increase in each of parameters (B, n, g, T)
 ```{r}
-# create function to run model with many different inputs 
+# Ineffeciently but correctly running our model 8 freakin times in order to get results for part B
+
+# S variable change, zero temp change
+
+s10_zero_cc_run <- function(t, T){
+
+#define variables
+T<- 0 #BAU temperature increase at year 100
+yr_span<- 100 #span of time 
+s10 <<- .005*1.1 # pure rate of time preference
+n<- .5 #how does income change value of money
+g<- .01 #rate economic growth
+B<- .05 
+r <<- s+n*g
+  
+#find the temperature
+temperature<-  min(t*T/yr_span, T)
+
+# fraction of economic activity that is retained in a year 
+yr_econ_activity<- exp(-B*(temperature)^2)
+
+#Total economic activity/consumption 
+total_econ_activity<- (yr_econ_activity)*exp(g*t)
+
+#Utility 
+utility<- ((total_econ_activity)^(1-n))/(1-n)
+
+#PV
+PV <- (utility/(1+r)^t)
+
+return(data.frame(time=t, 
+                  T_change=T, 
+                    temperature= temperature, 
+                    yr_econ_activity=yr_econ_activity, 
+                    total_econ_activity=total_econ_activity, 
+                  utility = utility,
+                  PV = PV))
+}
+
+zero_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, zero_cc_run)
 
 ```
 
