@@ -31,10 +31,6 @@ n<- .5 #how does income change value of money
 g<- .01 #rate economic growth
 B<- .05 
 r <<- s+n*g
-s10 <- s*1.1
-n10 <- n*1.1
-g10 <- g*1.1
-B10 <- B*1.1
   
 #find the temperature
 temperature<-  min(t*T/yr_span, T)
