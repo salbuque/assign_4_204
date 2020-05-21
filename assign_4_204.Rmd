@@ -235,16 +235,12 @@ temp44_PV_df <- temp44_cc_df %>%
   rename("temp44_PV" = PV)
 
 # Merge dfs and do calculations to find percent change
-PV_df_full <- merge(zero_PV_df, temp44_PV_df) %>% 
-  mutate(pct_change = ((temp44_PV - zero_PV)/zero_PV)*100)
+PV_df_full <- merge(zero_PV_df, temp44_PV_df)
 
-pct_change_results <- PV_df_full %>% 
-  select(temp44_PV, zero_PV) %>% 
+pct_change_results <- data.frame(PV_df_full) %>% 
   colSums()
-  
-L <- ((pct_change_results[1] - pct_change_results[2])/pct_change_results[2])*100
 
-L
+L <- ((pct_change_results[1] - pct_change_results[2])/pct_change_results[2])*100
 
 ```
 
@@ -252,20 +248,21 @@ B. Sensitivity Analysis of L
 
 Percent change in L that arises from a 10% increase in each of parameters (B, n, g, T)
 ```{r}
-# Ineffeciently but correctly running our model 8 freakin times in order to get results for part B
+# Ineffeciently but correctly running our model to get sensitivty PVs
 
-# S variable change 
+############
 
-s10_zero_cc_run <- function(t, T){
+# n variable change 
+
+n10_run <- function(t, T){
 
 #define variables
-T<- 0 #BAU temperature increase at year 100
 yr_span<- 100 #span of time 
-s10 <<- .005*1.1 # pure rate of time preference
-n<- .5 #how does income change value of money
+s <<- .005 # pure rate of time preference
+n<- .5*1.1 #how does income change value of money
 g<- .01 #rate economic growth
 B<- .05 
-r <<- s10+n*g
+r <<- s+n*g
   
 #find the temperature
 temperature<-  min(t*T/yr_span, T)
@@ -291,9 +288,151 @@ return(data.frame(time=t,
                   PV = PV))
 }
 
-zero_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, zero_cc_run)
+n10_df <- purrr::map2_dfr(rep(seq(from=0,to=200,by=1), 2), c(rep(0, 201), rep(4.4, 201)), n10_run)
+
+############
+
+# g variable change 
+
+g10_run <- function(t, T){
+
+#define variables
+yr_span<- 100 #span of time 
+s <<- .005 # pure rate of time preference
+n<- .5 #how does income change value of money
+g<- .01*1.1 #rate economic growth
+B<- .05 
+r <<- s+n*g
+  
+#find the temperature
+temperature<-  min(t*T/yr_span, T)
+
+# fraction of economic activity that is retained in a year 
+yr_econ_activity<- exp(-B*(temperature)^2)
+
+#Total economic activity/consumption 
+total_econ_activity<- (yr_econ_activity)*exp(g*t)
+
+#Utility 
+utility<- ((total_econ_activity)^(1-n))/(1-n)
+
+#PV
+PV <- (utility/(1+r)^t)
+
+return(data.frame(time=t, 
+                  T_change=T, 
+                    temperature= temperature, 
+                    yr_econ_activity=yr_econ_activity, 
+                    total_econ_activity=total_econ_activity, 
+                  utility = utility,
+                  PV = PV))
+}
+
+g10_df <- purrr::map2_dfr(rep(seq(from=0,to=200,by=1), 2), c(rep(0, 201), rep(4.4, 201)), g10_run)
+
+############
+
+# B variable change 
+
+b10_run <- function(t, T){
+
+#define variables
+yr_span<- 100 #span of time 
+s <<- .005 # pure rate of time preference
+n<- .5 #how does income change value of money
+g<- .01 #rate economic growth
+B<- .05*1.1 
+r <<- s+n*g
+  
+#find the temperature
+temperature<-  min(t*T/yr_span, T)
+
+# fraction of economic activity that is retained in a year 
+yr_econ_activity<- exp(-B*(temperature)^2)
+
+#Total economic activity/consumption 
+total_econ_activity<- (yr_econ_activity)*exp(g*t)
+
+#Utility 
+utility<- ((total_econ_activity)^(1-n))/(1-n)
+
+#PV
+PV <- (utility/(1+r)^t)
+
+return(data.frame(time=t, 
+                  T_change=T, 
+                    temperature= temperature, 
+                    yr_econ_activity=yr_econ_activity, 
+                    total_econ_activity=total_econ_activity, 
+                  utility = utility,
+                  PV = PV))
+}
+
+b10_df <- purrr::map2_dfr(rep(seq(from=0,to=200,by=1), 2), c(rep(0, 201), rep(4.4, 201)), b10_run)
+
+############
+
+# T variable change 
+
+T10_run <- function(t, T){
+
+#define variables
+yr_span<- 100 #span of time 
+s <<- .005 # pure rate of time preference
+n<- .5 #how does income change value of money
+g<- .01 #rate economic growth
+B<- .05
+r <<- s+n*g
+  
+#find the temperature
+temperature<-  min(t*T/yr_span, T)
+
+# fraction of economic activity that is retained in a year 
+yr_econ_activity<- exp(-B*(temperature)^2)
+
+#Total economic activity/consumption 
+total_econ_activity<- (yr_econ_activity)*exp(g*t)
+
+#Utility 
+utility<- ((total_econ_activity)^(1-n))/(1-n)
+
+#PV
+PV <- (utility/(1+r)^t)
+
+return(data.frame(time=t, 
+                  T_change=T, 
+                    temperature= temperature, 
+                    yr_econ_activity=yr_econ_activity, 
+                    total_econ_activity=total_econ_activity, 
+                  utility = utility,
+                  PV = PV))
+}
+
+T10_df <- purrr::map2_dfr(rep(seq(from=0,to=200,by=1), 2), c(rep(0, 201), rep(4.4*1.1, 201)), T10_run)
 
 ```
+
+Now we will use the data frames we created to find sums and percent changes in L
+
+```{r}
+
+n10_totalPVs <- n10_df %>% 
+  group_by(T_change) %>% 
+  summarize(total_PV = sum(PV))
+  
+g10_totalPVs <- g10_df %>% 
+  group_by(T_change) %>% 
+  summarize(total_PV = sum(PV))
+
+b10_totalPVs <-b10_df %>% 
+  group_by(T_change) %>% 
+  summarize(total_PV = sum(PV))
+
+T10_totalPVs <- T10_df %>% 
+  group_by(T_change) %>% 
+  summarize(total_PV = sum(PV))
+```
+
 
 C. Prevent climate change from occurring requires giving up a fraction theta of consumption every year for the next 200 years. Maximum value of theta society would be willing to endure every year to completely prevent climate change, theta*
 
