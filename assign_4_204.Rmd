@@ -237,6 +237,15 @@ temp44_PV_df <- temp44_cc_df %>%
 # Merge dfs and do calculations to find percent change
 PV_df_full <- merge(zero_PV_df, temp44_PV_df) %>% 
   mutate(pct_change = ((temp44_PV - zero_PV)/zero_PV)*100)
+
+pct_change_results <- PV_df_full %>% 
+  select(temp44_PV, zero_PV) %>% 
+  colSums()
+  
+L <- ((pct_change_results[1] - pct_change_results[2])/pct_change_results[2])*100
+
+L
+
 ```
 
 B. Sensitivity Analysis of L 
