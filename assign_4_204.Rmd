@@ -487,8 +487,10 @@ B<- .05
 r <<- s+n*g
 t <- seq(0,200, by = 1)
 
+#theta function
 theta_function <- function(theta){pct_change_results[1]-sum(((((1-theta)*zero_cc_df$total_econ_activity))^(1-n)/(1-n))/(1+r)^t)}
 
+#find theta where difference in PV = 0 between climate change scenarios
 theta_2c <- uniroot(theta_function, interval = c(0,1), tol = .0001)
 theta_2c$root
 ```
@@ -499,5 +501,64 @@ Theta* under uncertainty over T
 ```{r}
 #probability distribution:T = 2 (with probability .2), T = 4 (with probability .5), and T = 6 (with probability .3)
 
-```
+uncertain_T <- 2*.2+4*.5+6*.3
 
+run_2d <- function(t, T){
+
+#define variables
+yr_span<- 100 #span of time 
+s<- .005 # pure rate of time preference
+n<- .5 #how does income change value of money
+g<- .01 #rate economic growth
+B<- .05 
+r <<- s+n*g
+  
+#find the temperature
+temperature<-  min(t*T/yr_span, T)
+
+# fraction of economic activity that is retained in a year 
+yr_econ_activity<- exp(-B*(temperature)^2)
+
+#Total economic activity/consumption 
+total_econ_activity<- (yr_econ_activity)*exp(g*t)
+  
+#Utility 
+utility<- ((total_econ_activity)^(1-n))/(1-n)
+
+#PV
+PV <- (utility/(1+r)^t)
+
+return(data.frame(time=t, 
+                  T_change=T, 
+                    temperature= temperature, 
+                    yr_econ_activity=yr_econ_activity, 
+                    total_econ_activity=total_econ_activity, 
+                  utility = utility,
+                  PV = PV))
+}
+
+uncertain_T_df <- purrr::map2_dfr(rep(seq(from=0,to=200,by=1), 3), c(rep(2, 201), rep(4, 201), rep(6, 201)), run_2d)
+
+uncertain_2_df <- uncertain_T_df %>% 
+  filter(T_change == 2) %>% 
+  select(total_econ_activity)
+
+uncertain_4_df <- uncertain_T_df %>% 
+  filter(T_change == 4) %>% 
+  select(total_econ_activity)
+
+uncertain_6_df <- uncertain_T_df %>% 
+  filter(T_change == 6) %>% 
+  select(total_econ_activity)
+  
+#theta function
+theta_function_2d <- function(theta){pct_change_results[1]-
+    ((sum(((((1-theta)*uncertain_2_df$total_econ_activity))^(1-n)/(1-n))/(1+r)^t))*.2 +
+    (sum(((((1-theta)*uncertain_4_df$total_econ_activity))^(1-n)/(1-n))/(1+r)^t))*.5 +
+    (sum(((((1-theta)*uncertain_6_df$total_econ_activity))^(1-n)/(1-n))/(1+r)^t))*.3)}
+
+#find theta where difference in PV = 0 between climate change scenarios
+theta_2d <- uniroot(theta_function_2d, interval = c(0,1), tol = .0001)
+theta_2d$root
+
+```
