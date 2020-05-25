@@ -153,10 +153,11 @@ ext_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, ext_cc_run)
 A. Temperature over time 
 ```{r plot_no_cc_over_time}
 ggplot()+
-  geom_point(data = zero_cc_df, aes(x= time, y = temperature),color="red")+
-  geom_point(data = mod_cc_df, aes(x= time, y = temperature),color="blue")+
-  geom_point(data = ext_cc_df, aes(x= time, y = temperature),color="green")+
-  xlim(0,200)
+  geom_line(data = zero_cc_df, aes(x= time, y = temperature),color="coral")+
+  geom_line(data = mod_cc_df, aes(x= time, y = temperature),color="cornflowerblue")+
+  geom_line(data = ext_cc_df, aes(x= time, y = temperature),color="gray40")+
+  xlim(0,200)+
+  theme_minimal()
 ```
 
 B. Annual Economic Activity 
