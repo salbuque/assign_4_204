@@ -477,6 +477,62 @@ C. Prevent climate change from occurring requires giving up a fraction theta of 
 # assume original parameters
 #T = 0 instead of T = 4.4
 
+# No Climate Change 
+# define function Temperature over time 
+
+zero_cc_run <- function(t, T){
+
+#define variables
+T<- 0 #BAU temperature increase at year 100
+yr_span<- 100 #span of time 
+s<- .005 # pure rate of time preference
+n<- .5 #how does income change value of money
+g<- .01 #rate economic growth
+B<- .05 
+r <<- s+n*g
+  
+#find the temperature
+temperature<-  min(t*T/yr_span, T)
+
+# fraction of economic activity that is retained in a year 
+yr_econ_activity<- exp(-B*(temperature)^2)
+
+#Total economic activity/consumption 
+total_econ_activity<- (yr_econ_activity)*exp(g*t)
+  
+#Utility 
+utility<- ((total_econ_activity)^(1-n))/(1-n)
+
+#PV
+PV <- (utility/(1+r)^t)
+
+return(data.frame(time=t, 
+                  T_change=T, 
+                    temperature= temperature, 
+                    yr_econ_activity=yr_econ_activity, 
+                    total_econ_activity=total_econ_activity, 
+                  utility = utility,
+                  PV = PV))
+}
+
+zero_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, zero_cc_run)
+
+#define variables
+T<- 0 #BAU temperature increase at year 100
+yr_span<- 100 #span of time 
+s<- .005 # pure rate of time preference
+n<- .5 #how does income change value of money
+g<- .01 #rate economic growth
+B<- .05 
+r <<- s+n*g
+t <- seq(0,200, by = 1)
+
+theta_function <- function(theta){pct_change_results[1]-sum(((((1-theta)*zero_cc_df$total_econ_activity))^(1-n)/(1-n))/(1+r)^t)}
+
+uniroot(theta_function, interval = c(0,1), tol = .0001)
+
+total <- sum(zero_cc_df$PV)
+
 ```
 
 D. Suppose we are uncertain about T
