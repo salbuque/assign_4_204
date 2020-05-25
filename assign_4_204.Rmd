@@ -551,11 +551,14 @@ uncertain_6_df <- uncertain_T_df %>%
   filter(T_change == 6) %>% 
   select(total_econ_activity)
   
+#Math
+uncertain_pv <- 
+    ((sum((((uncertain_2_df$total_econ_activity))^(1-n)/(1-n))/(1+r)^t))*.2 +
+    (sum((((uncertain_4_df$total_econ_activity))^(1-n)/(1-n))/(1+r)^t))*.5 +
+    (sum((((uncertain_6_df$total_econ_activity))^(1-n)/(1-n))/(1+r)^t))*.3)
+
 #theta function
-theta_function_2d <- function(theta){pct_change_results[1]-
-    ((sum(((((1-theta)*uncertain_2_df$total_econ_activity))^(1-n)/(1-n))/(1+r)^t))*.2 +
-    (sum(((((1-theta)*uncertain_4_df$total_econ_activity))^(1-n)/(1-n))/(1+r)^t))*.5 +
-    (sum(((((1-theta)*uncertain_6_df$total_econ_activity))^(1-n)/(1-n))/(1+r)^t))*.3)}
+theta_function_2d <- function(theta){uncertain_pv-sum(((((1-theta)*zero_cc_df$total_econ_activity))^(1-n)/(1-n))/(1+r)^t)}
 
 #find theta where difference in PV = 0 between climate change scenarios
 theta_2d <- uniroot(theta_function_2d, interval = c(0,1), tol = .0001)
