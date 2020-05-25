@@ -41,7 +41,7 @@ yr_econ_activity<- exp(-B*(temperature)^2)
 
 #Total economic activity/consumption 
 total_econ_activity<- (yr_econ_activity)*exp(g*t)
-
+  
 #Utility 
 utility<- ((total_econ_activity)^(1-n))/(1-n)
 
@@ -235,13 +235,16 @@ temp44_PV_df <- temp44_cc_df %>%
   rename("temp44_PV" = PV)
 
 # Merge dfs and do calculations to find percent change
-PV_df_full <- merge(zero_PV_df, temp44_PV_df)
+PV_df_full <- merge(zero_PV_df, temp44_PV_df) %>% 
+  mutate(pct_change = ((temp44_PV - zero_PV)/zero_PV)*100)
 
-pct_change_results <- data.frame(PV_df_full) %>% 
+pct_change_results <- PV_df_full %>% 
+  select(temp44_PV, zero_PV) %>% 
   colSums()
-
+  
 L <- ((pct_change_results[1] - pct_change_results[2])/pct_change_results[2])*100
 
+L
 ```
 
 B. Sensitivity Analysis of L 
@@ -418,19 +421,49 @@ Now we will use the data frames we created to find sums and percent changes in L
 
 n10_totalPVs <- n10_df %>% 
   group_by(T_change) %>% 
-  summarize(total_PV = sum(PV))
+  summarize(total_PV = sum(PV)) %>% 
+  pivot_wider(values_from = total_PV, names_from = T_change) %>% 
+  rename("no_cc" = "0") %>% 
+  rename("cc" = "4.4") %>% 
+  mutate(pct_change = ((cc - no_cc)/no_cc)) %>% 
+  mutate(pct_change100 = pct_change*100)
   
 g10_totalPVs <- g10_df %>% 
   group_by(T_change) %>% 
-  summarize(total_PV = sum(PV))
+  summarize(total_PV = sum(PV)) %>% 
+  pivot_wider(values_from = total_PV, names_from = T_change) %>% 
+  rename("no_cc" = "0") %>% 
+  rename("cc" = "4.4") %>% 
+  mutate(pct_change = ((cc - no_cc)/no_cc)) %>% 
+  mutate(pct_change100 = pct_change*100)
 
 b10_totalPVs <-b10_df %>% 
   group_by(T_change) %>% 
-  summarize(total_PV = sum(PV))
+  summarize(total_PV = sum(PV)) %>% 
+  pivot_wider(values_from = total_PV, names_from = T_change) %>% 
+  rename("no_cc" = "0") %>% 
+  rename("cc" = "4.4") %>% 
+  mutate(pct_change = ((cc - no_cc)/no_cc)) %>% 
+  mutate(pct_change100 = pct_change*100)
 
 T10_totalPVs <- T10_df %>% 
   group_by(T_change) %>% 
-  summarize(total_PV = sum(PV))
+  summarize(total_PV = sum(PV)) %>% 
+  pivot_wider(values_from = total_PV, names_from = T_change) %>% 
+  rename("no_cc" = "0") %>% 
+  rename("cc" = "4.84") %>% 
+  mutate(pct_change = ((cc - no_cc)/no_cc)) %>% 
+  mutate(pct_change100 = pct_change*100)
+
+pct_change_vector <- c(n10_totalPVs$pct_change100,
+g10_totalPVs$pct_change100,
+b10_totalPVs$pct_change100,
+T10_totalPVs$pct_change100)
+
+pct_change_calc_df <- data.frame(pct_change_vector) %>% 
+  rename("new_L" = pct_change_vector) %>% 
+  mutate(final_pct_chg = (new_L-L)/L) %>% 
+  mutate(scenario = c("n10", "g10", "b10", "T10"))
 ```
 
 
@@ -439,6 +472,55 @@ C. Prevent climate change from occurring requires giving up a fraction theta of 
 ```{r}
 # assume original parameters
 #T = 0 instead of T = 4.4
+
+# part_c_df_44 <- temp44_cc_df %>% 
+#   select(cons_PV) %>% 
+#   rename("cons_PV44" = cons_PV)
+# 
+# part_c_df_0 <- zero_cc_df %>% 
+#   select(cons_PV) %>% 
+#   rename("cons_PV0" = cons_PV)
+
+part_c_df_full <- data.frame("year" = seq(0,200, by = 1), "zero_utility_PV" = zero_PV_df$zero_PV, "change_utility_PV" = temp44_PV_df$temp44_PV)
+
+# No Climate Change 
+# define function Temperature over time 
+theta_zero_cc_run <- function(t, T){
+
+#define variables
+T<- 0 #BAU temperature increase at year 100
+yr_span<- 100 #span of time 
+s<- .005 # pure rate of time preference
+n<- .5 #how does income change value of money
+g<- .01 #rate economic growth
+B<- .05 
+r <<- s+n*g
+  
+#find the temperature
+temperature<-  min(t*T/yr_span, T)
+
+# fraction of economic activity that is retained in a year 
+yr_econ_activity<- exp(-B*(temperature)^2)
+
+#Total economic activity/consumption 
+total_econ_activity<- (yr_econ_activity)*exp(g*t)
+  
+#Utility 
+utility<- ((total_econ_activity)^(1-n))/(1-n)
+
+#PV
+PV <- (utility/(1+r)^t)
+
+return(data.frame(time=t, 
+                  T_change=T, 
+                    temperature= temperature, 
+                    yr_econ_activity=yr_econ_activity, 
+                    total_econ_activity=total_econ_activity, 
+                  utility = utility,
+                  PV = PV))
+}
+
+zero_cc_df <- purrr::map2_dfr(seq(from=0,to=200,by=1), T, zero_cc_run)
 
 ```
 
