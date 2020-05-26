@@ -488,11 +488,13 @@ B<- .05
 r <<- s+n*g
 t <- seq(0,200, by = 1)
 
-#theta function
+#theta function: in this function we apply 1-theta first to a vector of the consumption values we calculated in part one for the no climate change scenario, then we apply that to our utility function, then to the PV function, and take a sum. This summed total is then subtracted from the PV value we calculated in part 2a.
 theta_function <- function(theta){pct_change_results[1]-sum(((((1-theta)*zero_cc_df$total_econ_activity))^(1-n)/(1-n))/(1+r)^t)}
 
-#find theta where difference in PV = 0 between climate change scenarios
+#use uniroot to find theta where difference in PV = 0 between climate change scenarios
 theta_2c <- uniroot(theta_function, interval = c(0,1), tol = .0001)
+
+#print result
 theta_2c$root
 ```
 
@@ -540,6 +542,7 @@ return(data.frame(time=t,
 
 uncertain_T_df <- purrr::map2_dfr(rep(seq(from=0,to=200,by=1), 3), c(rep(2, 201), rep(4, 201), rep(6, 201)), run_2d)
 
+#create dfs so we can quickly find summed PVs using the function we created for the theta function in part 2c. We could do this differently, like we did in 2a, but this works here and is pretty quick. 
 uncertain_2_df <- uncertain_T_df %>% 
   filter(T_change == 2) %>% 
   select(total_econ_activity)
@@ -552,17 +555,19 @@ uncertain_6_df <- uncertain_T_df %>%
   filter(T_change == 6) %>% 
   select(total_econ_activity)
   
-#Math
+#Math: find summed PVs of the three different scenarios, multiplied by probabilities, and then added all together to get the PV of utility under uncertainty.
 uncertain_pv <- 
     ((sum((((uncertain_2_df$total_econ_activity))^(1-n)/(1-n))/(1+r)^t))*.2 +
     (sum((((uncertain_4_df$total_econ_activity))^(1-n)/(1-n))/(1+r)^t))*.5 +
     (sum((((uncertain_6_df$total_econ_activity))^(1-n)/(1-n))/(1+r)^t))*.3)
 
-#theta function
+#theta function: same as in 2c except now we're comparing with the PV for the uncertainty scenario instead of the 4.4 scenario.
 theta_function_2d <- function(theta){uncertain_pv-sum(((((1-theta)*zero_cc_df$total_econ_activity))^(1-n)/(1-n))/(1+r)^t)}
 
 #find theta where difference in PV = 0 between climate change scenarios
 theta_2d <- uniroot(theta_function_2d, interval = c(0,1), tol = .0001)
+
+#print result. hooray!
 theta_2d$root
 
 ```
