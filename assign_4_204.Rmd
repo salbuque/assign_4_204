@@ -247,6 +247,7 @@ pct_change_results <- PV_df_full %>%
   
 L <- ((pct_change_results[1] - pct_change_results[2])/pct_change_results[2])*100
 
+#The answer
 L
 
 pct_change_results
@@ -504,8 +505,6 @@ Theta* under uncertainty over T
 ```{r}
 #probability distribution:T = 2 (with probability .2), T = 4 (with probability .5), and T = 6 (with probability .3)
 
-uncertain_T <- 2*.2+4*.5+6*.3
-
 run_2d <- function(t, T){
 
 #define variables
@@ -569,5 +568,4 @@ theta_2d <- uniroot(theta_function_2d, interval = c(0,1), tol = .0001)
 
 #print result. hooray!
 theta_2d$root
-
 ```
